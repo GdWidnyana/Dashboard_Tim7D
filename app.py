@@ -16,6 +16,21 @@ df['PEMINAT 2024'] = pd.to_numeric(df['PEMINAT 2024'], errors='coerce')
 # --- Title ---
 st.title("📊 Dashboard Analisis Jurusan IPS Berdasarkan Prospek Kerja")
 
+# Insight dan Tim
+st.markdown("""
+<div style="background-color:#f0f2f6; padding:20px; border-radius:10px; margin-bottom:25px; border-left: 5px solid #0066cc;">
+    <h3 style="color:#0066cc;">📌 Insight 4: Jurusan IPS PT Negeri yang Sepi Peminat, Tapi Punya Prospek Kerja Bagus</h3>
+    <p style="font-size:16px;">Banyak jurusan di rumpun IPS yang kurang diminati oleh calon mahasiswa, namun justru memiliki prospek karier yang cerah karena rendahnya persaingan dan tingginya kebutuhan di dunia kerja.</p>
+    <hr style="border:1px dashed #ccc;">
+    <p style="font-size:14px;"><strong>Disusun oleh Tim:</strong><br>
+    I Gede Surya Adi Pradana (525) - Universitas Udayana<br>
+    I Gede Widnyana (526) - Universitas Udayana<br>
+    I Gusti Agung Ayu Gita Pradnyaswari Mantara (527) - Universitas Udayana<br>
+    I Gusti Agung Istri Agrivina Shyta Devi (528) - Universitas Udayana
+    </p>
+</div>
+""", unsafe_allow_html=True)
+
 # --- Statistik Umum ---
 st.header("📌 Statistik Umum")
 col1, col2, col3, col4 = st.columns(4)
@@ -46,6 +61,60 @@ def dua_kolom_chart(title1, chart1, insight1, title2, chart2, insight2):
         st.subheader(title2)
         st.plotly_chart(chart2, use_container_width=True)
         st.markdown(insight2)
+
+# --- Filter Jurusan dengan Peminat antara 0 - 50 ---
+filtered_df_sepi_peminat = filtered_df[(filtered_df['PEMINAT 2024'] >= 0) & (filtered_df['PEMINAT 2024'] <= 50)]
+
+# Ambil 10 jurusan teratas berdasarkan jumlah peminat (0 - 50)
+filtered_df_sepi_peminat_top10 = filtered_df_sepi_peminat.nlargest(10, 'PEMINAT 2024')
+
+# --- Filter Jurusan dengan Peminat lebih dari 50 ---
+filtered_df_banyak_peminat = filtered_df[filtered_df['PEMINAT 2024'] > 50]
+
+# Ambil 10 jurusan teratas berdasarkan jumlah peminat (> 50)
+filtered_df_banyak_peminat_top10 = filtered_df_banyak_peminat.nlargest(10, 'PEMINAT 2024')
+
+# --- Visualisasi Diagram Batang untuk Peminat 0 - 50 ---
+fig1 = px.bar(
+    filtered_df_sepi_peminat_top10,
+    x='PEMINAT 2024',
+    y='NAMA',
+    orientation='h',
+    title="10 Jurusan dengan Peminat 2024 antara 0 dan 50",
+    labels={'PEMINAT 2024': 'Jumlah Peminat', 'NAMA': 'Nama Jurusan'},
+    color='PEMINAT 2024',
+    color_continuous_scale='Viridis'
+)
+
+# --- Visualisasi Diagram Batang untuk Peminat lebih dari 50 ---
+fig2 = px.bar(
+    filtered_df_banyak_peminat_top10,
+    x='PEMINAT 2024',
+    y='NAMA',
+    orientation='h',
+    title="10 Jurusan dengan Peminat 2024 lebih dari 50",
+    labels={'PEMINAT 2024': 'Jumlah Peminat', 'NAMA': 'Nama Jurusan'},
+    color='PEMINAT 2024',
+    color_continuous_scale='Viridis'
+)
+
+# --- Tampilkan Diagram Peminat 0 - 50 ---
+st.subheader("📊 Diagram Jurusan IPS dengan Jumlah Peminat antara 0 dan 50")
+st.plotly_chart(fig1, use_container_width=True)
+
+# --- Tabel Insight untuk Peminat 0 - 50 ---
+insight_table_1 = filtered_df_sepi_peminat_top10[['ASAL UNIV', 'NAMA', 'JENJANG', 'PEMINAT 2024', 'DAYA TAMPUNG 2025', 'PROSPEK KERJA']]
+st.write("Pemetaan Jurusan dengan Peminat Rendah (0 - 50):")
+st.write(insight_table_1)
+
+# --- Tampilkan Diagram Peminat lebih dari 50 ---
+st.subheader("📊 Diagram Jurusan IPS dengan Jumlah Peminat lebih dari 50")
+st.plotly_chart(fig2, use_container_width=True)
+
+# --- Tabel Insight untuk Peminat lebih dari 50 ---
+insight_table_2 = filtered_df_banyak_peminat_top10[['ASAL UNIV', 'NAMA', 'JENJANG', 'PEMINAT 2024', 'DAYA TAMPUNG 2025', 'PROSPEK KERJA']]
+st.write("Pemetaan Jurusan dengan Peminat Tinggi (> 50):")
+st.write(insight_table_2)
 
 # --- Diagram Peminat (Top 20 & Bottom 20) ---
 peminat_df = filtered_df.groupby("NAMA")["PEMINAT 2024"].sum().reset_index().sort_values("PEMINAT 2024", ascending=False)
