@@ -612,5 +612,3 @@ fig_bottom20_univ = px.bar(
 # Tampilkan visual dan insight secara berdampingan
 dua_kolom_chart("🏆 Top 20 Universitas", fig_top20_univ, insight_top_univ,
                 "📉 Bottom 20 Universitas", fig_bottom20_univ, insight_bottom_univ)
-
-
