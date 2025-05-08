@@ -32,7 +32,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- Statistik Umum ---
-st.header("📌 Statistik Umum")
+st.header("📌 Statistik Umum Jurusan IPS Seluruh PTN pada Jalur SNBP dan SNBT")
 col1, col2, col3, col4 = st.columns(4)
 col1.metric("Jumlah Program Studi", df['NAMA'].nunique())
 col2.metric("Jumlah PTN", df['ASAL UNIV'].nunique())
