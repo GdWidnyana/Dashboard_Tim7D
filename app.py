@@ -281,7 +281,7 @@ insight_prospek = f"""
 st.markdown(insight_prospek)
 
 # --- Diagram Jumlah Jurusan per Universitas (Top 20 & Bottom 20) ---
-st.header("🏫 Jumlah Jurusan per Universitas")
+st.header("🏫 Jumlah Jurusan IPS setiap Universitas")
 
 # Hitung jumlah jurusan unik per universitas
 jurusan_per_univ = df.groupby("ASAL UNIV")["NAMA"].nunique().reset_index()
@@ -311,7 +311,7 @@ fig_top20_univ = px.bar(
     top20_univ,
     x="Universitas",
     y="Jumlah Jurusan",
-    title="Top 20 Universitas dengan Jumlah Jurusan Terbanyak",
+    title="Top 20 Universitas dengan Jumlah Jurusan IPS Terbanyak",
     labels={"Universitas": "Universitas", "Jumlah Jurusan": "Jumlah Jurusan"},
     hover_data=["Universitas"]
 )
@@ -319,7 +319,7 @@ fig_bottom20_univ = px.bar(
     bottom20_univ,
     x="Universitas",
     y="Jumlah Jurusan",
-    title="Bottom 20 Universitas dengan Jumlah Jurusan Tersedikit",
+    title="Bottom 20 Universitas dengan Jumlah Jurusan IPS Paling Sedikit",
     labels={"Universitas": "Universitas", "Jumlah Jurusan": "Jumlah Jurusan"},
     hover_data=["Universitas"]
 )
