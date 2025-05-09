@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import LabelEncoder
 
 # --- Ambil data dari Google Spreadsheet dalam format CSV ---
 spreadsheet_url = "https://docs.google.com/spreadsheets/d/1f6m1Bjj3IxCMCbPEcgWt6bsZ7uEz1pK1baiK34XqzlM/export?format=csv"
@@ -612,3 +614,64 @@ fig_bottom20_univ = px.bar(
 # Tampilkan visual dan insight secara berdampingan
 dua_kolom_chart("🏆 Top 20 Universitas", fig_top20_univ, insight_top_univ,
                 "📉 Bottom 20 Universitas", fig_bottom20_univ, insight_bottom_univ)
+
+
+st.header("🔮 Prediksi Kategori Jurusan (Machine Learning)")
+
+# --- Preprocessing untuk model ---
+df_model = df.copy()
+
+# Encode target
+df_model['KATEGORI JURUSAN'] = df_model['KATEGORI JURUSAN'].map({'SEPI PEMINAT': 0, 'RAMAI PEMINAT': 1})
+
+# Encode label kategori
+label_cols = ['ASAL UNIV', 'PROVINSI', 'PROSPEK KERJA', 'JALUR', 'NAMA', 'JENJANG']
+label_encoders = {}
+for col in label_cols:
+    le = LabelEncoder()
+    df_model[col] = le.fit_transform(df_model[col].astype(str))
+    label_encoders[col] = le
+
+# Fitur yang digunakan (tanpa RASIO KEKETATAN)
+fitur = ['PEMINAT 2024', 'ASAL UNIV', 'PROVINSI',
+         'DAYA TAMPUNG 2025', 'PROSPEK KERJA', 'JALUR', 'NAMA', 'JENJANG']
+
+# Data training
+X = df_model[fitur]
+y = df_model['KATEGORI JURUSAN']
+
+# Latih model
+model = RandomForestClassifier(random_state=42)
+model.fit(X, y)
+
+# --- Form input pengguna ---
+st.subheader("📝 Masukkan Data Jurusan")
+
+with st.form("form_prediksi"):
+    peminat = st.number_input("Peminat 2024", min_value=0)
+    daya_tampung = st.number_input("Daya Tampung 2025", min_value=0)
+
+    asal_univ = st.selectbox("Asal Universitas", label_encoders['ASAL UNIV'].classes_)
+    provinsi = st.selectbox("Provinsi", label_encoders['PROVINSI'].classes_)
+    prospek = st.selectbox("Prospek Kerja", label_encoders['PROSPEK KERJA'].classes_)
+    jalur = st.selectbox("Jalur", label_encoders['JALUR'].classes_)
+    nama = st.selectbox("Nama Jurusan", label_encoders['NAMA'].classes_)
+    jenjang = st.selectbox("Jenjang", label_encoders['JENJANG'].classes_)
+
+    pred_button = st.form_submit_button("Prediksi Kategori")
+
+# --- Prediksi ---
+if pred_button:
+    input_data = [[
+        peminat,
+        label_encoders['ASAL UNIV'].transform([asal_univ])[0],
+        label_encoders['PROVINSI'].transform([provinsi])[0],
+        daya_tampung,
+        label_encoders['PROSPEK KERJA'].transform([prospek])[0],
+        label_encoders['JALUR'].transform([jalur])[0],
+        label_encoders['NAMA'].transform([nama])[0],
+        label_encoders['JENJANG'].transform([jenjang])[0],
+    ]]
+    hasil = model.predict(input_data)[0]
+    kategori = "RAMAI PEMINAT" if hasil == 1 else "SEPI PEMINAT"
+    st.success(f"✅ Prediksi: Jurusan ini termasuk **{kategori}**.")
