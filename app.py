@@ -616,7 +616,7 @@ dua_kolom_chart("🏆 Top 20 Universitas", fig_top20_univ, insight_top_univ,
                 "📉 Bottom 20 Universitas", fig_bottom20_univ, insight_bottom_univ)
 
 
-st.header("🔮 Prediksi Kategori Jurusan (Machine Learning)")
+st.header("🔮 Prediksi Kategori Jurusan IPS (Ramai atau Sepi Peminat")
 
 # --- Preprocessing untuk model ---
 df_model = df.copy()
