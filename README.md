@@ -29,25 +29,72 @@ Beberapa riset sebelumnya juga telah membahas pemodelan peminatan jurusan berdas
 * Melakukan oversampling data minoritas dengan SMOTE untuk menangani ketidakseimbangan kelas.
 * Memilih model dengan akurasi terbaik berdasarkan metrik evaluasi.
 
-## Data Understanding
+## 📊 Data Understanding
 
-Dataset diperoleh dari hasil scraping situs [https://snpmb.bppp.kemdikbud.go.id/snbp/daftar-ptn-snbp](https://snpmb.bppp.kemdikbud.go.id/snbp/daftar-ptn-snbp) dan terdiri dari informasi jurusan IPS dengan total 2298 entri. 
+Dataset ini diperoleh dari hasil scraping situs resmi SNPMB:  
+🔗 [https://snpmb.bppp.kemdikbud.go.id/snbp/daftar-ptn-snbp](https://snpmb.bppp.kemdikbud.go.id/snbp/daftar-ptn-snbp)
 
-### Variabel-variabel pada dataset jurusan IPS 
-Variabel-variabel pada dataset adalah sebagai berikut:
+Dataset berisi informasi mengenai jurusan-jurusan IPS dari berbagai perguruan tinggi di Indonesia, dengan total **2298 entri**. Dataset lengkap dapat diakses melalui tautan berikut:  
+🔗 [Spreadsheet Dataset SNBP IPS](https://docs.google.com/spreadsheets/d/1f6m1Bjj3IxCMCbPEcgWt6bsZ7uEz1pK1baiK34XqzlM/)
 
-* `KODE` : Kode jurusan
-* `NAMA` : Nama jurusan
-* `JENJANG` : Jenjang studi (Sarjana, Diploma)
-* `DAYA TAMPUNG 2025` : Jumlah kuota jurusan untuk tahun 2025
-* `PEMINAT 2024` : Jumlah peminat jurusan pada tahun 2024
-* `JENIS PORTOFOLIO` : Kebutuhan portofolio atau tidak
-* `JALUR` : Jalur masuk (SNBP, SNBT)
-* `ASAL UNIV` : Nama universitas penyelenggara
-* `PROSPEK KERJA` : Prospek pekerjaan lulusan
-* `PROVINSI` : Lokasi universitas
-* `RASIO KEKETATAN` : Persentase keketatan (peminat : daya tampung)
-* `KATEGORI JURUSAN` : Target klasifikasi, yaitu "SEPI PEMINAT" atau "RAMAI PEMINAT"
+---
+
+### 📁 Struktur Dataset
+
+Dataset terdiri dari **13 kolom**, masing-masing berisi informasi berikut:
+
+| Kolom | Deskripsi |
+|-------|-----------|
+| `NO` | Nomor urut entri |
+| `KODE` | Kode jurusan |
+| `NAMA` | Nama jurusan |
+| `JENJANG` | Jenjang studi (misal: Sarjana, Diploma 3, Diploma 4) |
+| `DAYA TAMPUNG 2025` | Kuota penerimaan untuk tahun 2025 |
+| `PEMINAT 2024` | Jumlah peminat jurusan pada tahun 2024 |
+| `JENIS PORTOFOLIO` | Informasi apakah jurusan memerlukan portofolio |
+| `JALUR` | Jalur seleksi (misal: SNBP, SNBT) |
+| `ASAL UNIV` | Nama universitas penyelenggara |
+| `PROSPEK KERJA` | Prospek kerja dari jurusan tersebut |
+| `PROVINSI` | Lokasi asal universitas |
+| `RASIO KEKETATAN` | Perbandingan antara peminat dan daya tampung |
+| `KATEGORI JURUSAN` | Label target klasifikasi: "SEPI PEMINAT" atau "RAMAI PEMINAT" |
+
+---
+
+### 🔍 Pemeriksaan Awal Kualitas Data
+
+Sebelum dilakukan tahap preprocessing, dilakukan eksplorasi untuk memastikan kualitas data sebagai berikut:
+
+#### ❌ Nilai Kosong (Missing Values)
+```python
+df.isna().sum()
+```
+Hasil:
+- **Tidak ditemukan nilai kosong** pada seluruh kolom. Semua kolom memiliki jumlah nilai non-null sebanyak 2298.
+
+#### 🌀 Duplikasi Data
+```python
+df.duplicated().sum()
+```
+Hasil:
+- **Tidak ditemukan data duplikat** (`0` baris duplikat), artinya seluruh entri adalah unik.
+
+---
+
+#### ✅ Jumlah Data dan Tipe Kolom
+```python
+df.info()
+```
+Hasil:
+- Total entri: **2298**
+- Tipe data: 4 kolom bertipe `int64`, 9 kolom bertipe `object`
+- Tidak ditemukan kolom dengan tipe data `float` pada tahap awal.
+
+### 📝 Kesimpulan Awal
+- Dataset dalam kondisi **lengkap** (tidak ada missing values).
+- **Tidak ada data duplikat**, sehingga seluruh entri layak diproses lebih lanjut.
+- Variabel target (`KATEGORI JURUSAN`) sudah tersedia dan akan dilakukan pada tahap pre-processing yakni label encoder menjadi 0 dan 1 untuk siap digunakan untuk proses klasifikasi.
+- Rasio keketatan (`RASIO KEKETATAN`) masih berupa tipe object dan akan diubah ke tipe float pada tahap preprocessing, serta dilakukan pengubahan koma menjadi titik agar nilai rasio bisa dihitung oleh model.
 
 ## Visualisasi
 
@@ -101,15 +148,24 @@ Variabel-variabel pada dataset adalah sebagai berikut:
 
 Langkah-langkah data preparation yang dilakukan:
 
-* **Penanganan kolom yang tidak dipakai**: Menghapus kolom aneh yang muncul tidak jelas seperti Unnamed: 13
-* **Pengecekan data kosong dan Pembersihan data dari duplikasi**: Mengecek data yang bernilai null dan Menghapus data ganda agar model tidak bias terhadap entri yang berulang.
-* **Encoding fitur kategorikal menggunakan LabelEncoder**: Mengubah data kategorikal menjadi numerik agar dapat diproses oleh algoritma machine learning.
-* **Oversampling data minoritas dengan SMOTE**: Untuk mengatasi ketidakseimbangan kelas antara jurusan ramai dan sepi peminat, sehingga model tidak berat sebelah.
-* **Pembagian data menjadi fitur (X) dan target (y)**: Memisahkan data input (fitur) dan output (label) untuk keperluan pelatihan model.
-* **Normalisasi menggunakan MinMaxScaler**: Menyamakan skala antar fitur numerik agar model lebih stabil dan cepat belajar.
-* **Pembagian data latih dan uji menggunakan stratified split (80:20)**: Menjamin distribusi kelas yang seimbang pada data latih dan uji, penting untuk menjaga akurasi dan generalisasi model.
+1. **Penanganan kolom yang tidak dipakai**: Menghapus kolom aneh yang muncul tidak jelas seperti Unnamed: 13
+2. **Pengecekan data kosong** : untuk mengetahui apakah dataset mengandung nilai yang hilang (missing values). Salah satu cara untuk mengeceknya adalah dengan menggunakan perintah berikut: df.isna().sum()
+3.  **Pemeriksaan Data Duplikat**: Setelah memeriksa nilai hilang, langkah berikutnya adalah mengecek apakah terdapat baris duplikat dalam dataset. Hal ini penting untuk memastikan bahwa tidak ada data ganda yang bisa memengaruhi analisis.
+4. **Mengubah Format Angka Keketatan** : Beberapa angka pada kolom "RASIO KEKETATAN" masih menggunakan koma sebagai pemisah desimal (misalnya: 75,0), padahal Python menggunakan titik (75.0). Jadi kita ubah koma menjadi titik, lalu konversi isinya menjadi tipe data numerik (float), agar bisa dihitung oleh model. (SUDAH DICANTUMKAN DI MARKDOWN PENJELASANNYA)
+5. **Mengubah Kategori Jurusan Menjadi Angka** : Model machine learning hanya bisa bekerja dengan angka, bukan teks. Maka, kita ubah kolom **"KATEGORI JURUSAN"** yang berisi dua label yaitu:
+- `"SEPI PEMINAT"` menjadi `0`
+- `"RAMAI PEMINAT"` menjadi `1`
+Dengan cara ini, model bisa mempelajari hubungan antara fitur jurusan dan apakah jurusan itu ramai atau tidak.
+6. **Mengecek Nilai Unik dan Data Kosong pada Kolom Target** : Langkah ini bertujuan untuk memastikan bahwa:
+- Kolom `KATEGORI JURUSAN` hanya berisi nilai label yang valid, yaitu `0` dan `1`.
+- Tidak ada nilai kosong (missing values) pada kolom target sebelum proses modeling.
+Hal ini penting agar proses pelatihan model tidak terganggu oleh nilai tidak valid atau kosong.
+7. **Encoding fitur kategorikal menggunakan LabelEncoder**: Mengubah data kategorikal menjadi numerik agar dapat diproses oleh algoritma machine learning.
+8. **Oversampling data minoritas dengan SMOTE**: Untuk mengatasi ketidakseimbangan kelas antara jurusan ramai dan sepi peminat, sehingga model tidak berat sebelah. SMOTE dilakukan karena distribusi label target tidak seimbang (jumlah data jurusan "Ramai Peminat" jauh lebih banyak).
+9. **Pembagian data menjadi fitur (X) dan target (y)**: Memisahkan data input (fitur) dan output (label) untuk keperluan pelatihan model.Fitur (X): Dipilih dari kolom-kolom yang relevan terhadap prediksi minat jurusan, seperti 'PEMINAT 2024', 'ASAL UNIV', 'PROVINSI', 'DAYA TAMPUNG 2025', 'PROSPEK KERJA', 'JALUR', 'NAMA', 'JENJANG'. Fitur tersebut dipilih dengan mempertimbangkan skor korelasi, pengalaman pengguna, dan faktor riil di lapangan yang menjadi pertimbangan pengguna di saat memilih jurusan.
+10. **Normalisasi menggunakan MinMaxScaler**: Menyamakan skala antar fitur numerik agar model lebih stabil dan cepat belajar.
+11. **Pembagian data latih dan uji menggunakan stratified split (80:20)**: Menjamin distribusi kelas yang seimbang pada data latih dan uji, penting untuk menjaga akurasi dan generalisasi model.
 
-SMOTE dilakukan karena distribusi label target tidak seimbang (jumlah data jurusan "Ramai Peminat" jauh lebih banyak).
 
 ## Modeling
 
@@ -131,6 +187,57 @@ Dua model yang digunakan:
 
 * **Kelebihan**: Mampu menangani data numerik dan kategorikal, kuat terhadap overfitting, dan memberikan performa yang stabil.
 * **Kekurangan**: Lebih lambat dibandingkan model sederhana dan interpretabilitas lebih rendah dibanding pohon keputusan tunggal.
+
+### Penjelasan Algoritma & Parameter Model Machine Learning
+
+Dalam proyek ini digunakan dua algoritma pembelajaran mesin: **Random Forest** dan **Naive Bayes Gaussian**. Penjelasan masing-masing model, prinsip kerja, serta parameter pentingnya disampaikan berikut ini:
+
+
+##  Random Forest (Baseline)
+
+Random Forest adalah algoritma **ensemble learning** berbasis **decision tree** yang menggabungkan banyak pohon keputusan untuk menghasilkan prediksi yang lebih stabil dan akurat.
+
+#### Cara Kerja:
+- Membangun beberapa decision tree dari subset data acak (**bootstrap sampling**).
+- Masing-masing pohon memberikan prediksi.
+- Hasil akhir ditentukan dengan **voting** (untuk klasifikasi) atau **rata-rata** (untuk regresi).
+
+#### Parameter Penting:
+| Parameter        | Default | Fungsi |
+|------------------|---------|--------|
+| `n_estimators`   | 100     | Jumlah pohon dalam hutan. Semakin banyak, semakin stabil, namun waktu latih bertambah. |
+| `max_depth`      | None    | Kedalaman maksimal setiap pohon. Bisa dikontrol untuk menghindari overfitting. |
+| `random_state`   | 42      | Mengatur seed agar hasil bisa direproduksi. |
+| `min_samples_split` | 2   | Jumlah minimal sampel untuk membagi node. |
+| `criterion`      | "gini"  | Ukuran impuritas node (bisa "gini" atau "entropy"). |
+
+#### Alasan Penggunaan Default:
+- Model Random Forest setelah SMOTE dan normalisasi berhasil mencapai **akurasi sekitar 99%**.
+- Karena performa sudah sangat baik, **tuning hyperparameter tidak dilakukan** untuk menghemat waktu dan sumber daya.
+- Parameter default dinilai sudah cukup optimal dalam konteks data ini.
+
+---
+
+##  Naive Bayes Gaussian (Baseline)
+
+Naive Bayes adalah algoritma probabilistik berdasarkan **teorema Bayes** dengan asumsi **independensi antar fitur**.
+
+#### Cara Kerja:
+- Menghitung probabilitas posterior dari setiap kelas berdasarkan distribusi fitur.
+- Untuk GaussianNB, fitur dianggap mengikuti **distribusi normal (Gaussian)**.
+- Kelas dengan probabilitas tertinggi dipilih sebagai hasil prediksi.
+
+#### Parameter Penting:
+| Parameter         | Default     | Fungsi |
+|-------------------|-------------|--------|
+| `var_smoothing`   | 1e-9        | Menambahkan nilai kecil ke varians untuk menghindari pembagian dengan nol (numerical stability). |
+| `priors`          | None        | Probabilitas awal untuk masing-masing kelas. Default-nya dihitung otomatis dari data. |
+
+#### Alasan Penggunaan Default:
+- Model Naive Bayes setelah SMOTE dan normalisasi berhasil mencapai **akurasi sekitar 89%**.
+- Akurasi ini sudah dianggap cukup baik untuk baseline tanpa tuning lebih lanjut.
+- Penggunaan parameter default dipertahankan agar proses lebih **efisien dan sederhana**, tanpa mengorbankan akurasi secara signifikan.
+
 
 ## Evaluation
 
@@ -227,7 +334,7 @@ $\text{F1} = 2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precisi
   * Akurasi: **0.8939**
   * F1-score seimbang di kedua kelas
   * ⚖️ Stabil tetapi kalah dalam performa dibanding Random Forest.
-  
+
 **Kesimpulan**:
 
 * Penggunaan SMOTE terbukti meningkatkan performa model klasifikasi.
@@ -236,8 +343,4 @@ $\text{F1} = 2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precisi
 * Berdasarkan hasil evaluasi, model terbaik yang dipilih adalah **Random Forest dengan SMOTE dan tuning parameter**, karena memberikan generalisasi yang optimal dan skor evaluasi tertinggi.
 
 ---
-
-*Catatan: Gambar, kode, atau visualisasi tambahan dapat ditambahkan sesuai kebutuhan.*
-
-
 
