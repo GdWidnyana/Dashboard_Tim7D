@@ -90,7 +90,7 @@ Hasil:
 - Tipe data: 4 kolom bertipe `int64`, 9 kolom bertipe `object`
 - Tidak ditemukan kolom dengan tipe data `float` pada tahap awal.
 
-### 📝 Kesimpulan Awal
+### 📝 Kesimpulan Data Understanding Tahap Awal
 - Dataset dalam kondisi **lengkap** (tidak ada missing values).
 - **Tidak ada data duplikat**, sehingga seluruh entri layak diproses lebih lanjut.
 - Variabel target (`KATEGORI JURUSAN`) sudah tersedia dan akan dilakukan pada tahap pre-processing yakni label encoder menjadi 0 dan 1 untuk siap digunakan untuk proses klasifikasi.
